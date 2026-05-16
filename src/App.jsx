@@ -97,6 +97,15 @@ export default function App() {
       </header>
 
       <main className="app-main">
+        {token && (
+          <div style={{ textAlign: 'right' }}>
+            <button className="btn btn--outline" style={{ fontSize: 12 }} onClick={() => {
+              localStorage.removeItem(TOKEN_KEY)
+              setToken('')
+            }}>Changer de token</button>
+          </div>
+        )}
+
         {!token && (
           <div className="token-setup">
             <strong>Configuration requise</strong>
