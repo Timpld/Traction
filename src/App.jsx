@@ -5,79 +5,77 @@ import DayList from './components/DayList'
 import { exportToExcel } from './utils/exportExcel'
 import './App.css'
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2_FaUnwRcl1XEWXmAKpu_HTo-a0w2uQxBsKSV77mHNM4WGFeppeCkUy1kn69r9c2v/exec'
+const GITHUB_API = 'https://api.github.com/repos/Timpld/Traction/contents/data/tractions.json'
+const TOKEN_KEY = 'gh-token'
 
-const INITIAL_DATA = {
-  "2026-04-13": { "sets": [10] },
-  "2026-04-14": { "sets": [10, 5, 25] },
-  "2026-04-15": { "sets": [20, 30] },
-  "2026-04-16": { "sets": [20, 20, 10] },
-  "2026-04-17": { "sets": [10, 20, 10] },
-  "2026-04-24": { "sets": [5] },
-  "2026-04-30": { "sets": [20, 10] },
-  "2026-05-01": { "sets": [10, 10, 5] },
-  "2026-05-02": { "sets": [24] },
-  "2026-05-13": { "sets": [15, 5] },
-  "2026-05-14": { "sets": [15, 5] },
-  "2026-05-15": { "sets": [10, 10, 15, 15] },
+async function loadFromGitHub() {
+  const res = await fetch(GITHUB_API, {
+    headers: { 'Accept': 'application/vnd.github.v3+json' },
+  })
+  if (!res.ok) throw new Error('Load failed')
+  const file = await res.json()
+  const content = atob(file.content.replace(/\s/g, ''))
+  return { data: JSON.parse(content), sha: file.sha }
 }
 
-function fetchData() {
-  return new Promise((resolve) => {
-    const callbackName = '__cb_' + Date.now()
-    const script = document.createElement('script')
-    const timer = setTimeout(() => {
-      cleanup()
-      resolve(INITIAL_DATA)
-    }, 10000)
-
-    function cleanup() {
-      clearTimeout(timer)
-      delete window[callbackName]
-      if (script.parentNode) script.parentNode.removeChild(script)
-    }
-
-    window[callbackName] = (data) => {
-      cleanup()
-      resolve(data && Object.keys(data).length > 0 ? data : INITIAL_DATA)
-    }
-
-    script.src = APPS_SCRIPT_URL + '?callback=' + callbackName
-    script.onerror = () => { cleanup(); resolve(INITIAL_DATA) }
-    document.head.appendChild(script)
+async function saveToGitHub(data, token) {
+  const fileRes = await fetch(GITHUB_API, {
+    headers: { 'Accept': 'application/vnd.github.v3+json' },
   })
-}
-
-async function saveData(data) {
-  await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(data),
-    redirect: 'follow',
+  const file = await fileRes.json()
+  const content = btoa(JSON.stringify(data, null, 2))
+  const res = await fetch(GITHUB_API, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.github.v3+json',
+    },
+    body: JSON.stringify({
+      message: 'update traction data',
+      content,
+      sha: file.sha,
+    }),
   })
+  if (!res.ok) throw new Error('Save failed')
 }
 
 export default function App() {
   const [data, setData] = useState(null)
+  const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || '')
+  const [tokenInput, setTokenInput] = useState('')
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(false)
 
   useEffect(() => {
-    fetchData().then(setData).catch(() => setData(INITIAL_DATA))
+    loadFromGitHub()
+      .then(({ data }) => setData(data))
+      .catch(() => setData({}))
   }, [])
+
+  function handleSaveToken() {
+    const t = tokenInput.trim()
+    if (!t) return
+    localStorage.setItem(TOKEN_KEY, t)
+    setToken(t)
+    setTokenInput('')
+  }
 
   async function handleUpdate(newData) {
     setData(newData)
+    if (!token) return
     setSaving(true)
+    setSaveError(false)
     try {
-      await saveData(newData)
+      await saveToGitHub(newData, token)
+    } catch {
+      setSaveError(true)
     } finally {
       setSaving(false)
     }
   }
 
-  if (!data) {
-    return <div className="app-loading">Chargement…</div>
-  }
+  if (!data) return <div className="app-loading">Chargement…</div>
 
   return (
     <div className="app">
@@ -87,12 +85,32 @@ export default function App() {
           <p className="app-subtitle">
             Suivi depuis le 13 avril 2026 · Départ max 10 reps
             {saving && <span className="saving-indicator"> · Sauvegarde…</span>}
+            {saveError && <span className="save-error"> · Erreur — vérifie ton token</span>}
           </p>
           <div className="app-divider" />
         </div>
       </header>
 
       <main className="app-main">
+        {!token && (
+          <div className="token-setup">
+            <strong>Configuration requise</strong>
+            <p>Entre ton token GitHub pour sauvegarder tes séances sur tous tes appareils.</p>
+            <div className="token-input-row">
+              <input
+                type="password"
+                placeholder="github_pat_..."
+                value={tokenInput}
+                onChange={e => setTokenInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSaveToken()}
+                className="day-row__input"
+                style={{ width: '100%', maxWidth: 340 }}
+              />
+              <button className="btn btn--primary" onClick={handleSaveToken}>Enregistrer</button>
+            </div>
+          </div>
+        )}
+
         <Stats data={data} />
         <Chart data={data} />
 
@@ -107,4 +125,3 @@ export default function App() {
     </div>
   )
 }
-

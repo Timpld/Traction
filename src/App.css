@@ -82,6 +82,37 @@ body {
   color: var(--gold);
 }
 
+.save-error {
+  color: #c0392b;
+}
+
+.token-setup {
+  background: var(--white);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.token-setup strong {
+  color: var(--navy);
+  font-size: 15px;
+}
+
+.token-setup p {
+  color: var(--text-muted);
+}
+
+.token-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .app-divider {
   height: 2px;
   background: var(--gold);
