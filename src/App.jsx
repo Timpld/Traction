@@ -22,11 +22,30 @@ const INITIAL_DATA = {
   "2026-05-15": { "sets": [10, 10, 15, 15] },
 }
 
-async function fetchData() {
-  const res = await fetch(APPS_SCRIPT_URL, { redirect: 'follow' })
-  const json = await res.json()
-  if (!json || Object.keys(json).length === 0) return INITIAL_DATA
-  return json
+function fetchData() {
+  return new Promise((resolve) => {
+    const callbackName = '__cb_' + Date.now()
+    const script = document.createElement('script')
+    const timer = setTimeout(() => {
+      cleanup()
+      resolve(INITIAL_DATA)
+    }, 10000)
+
+    function cleanup() {
+      clearTimeout(timer)
+      delete window[callbackName]
+      if (script.parentNode) script.parentNode.removeChild(script)
+    }
+
+    window[callbackName] = (data) => {
+      cleanup()
+      resolve(data && Object.keys(data).length > 0 ? data : INITIAL_DATA)
+    }
+
+    script.src = APPS_SCRIPT_URL + '?callback=' + callbackName
+    script.onerror = () => { cleanup(); resolve(INITIAL_DATA) }
+    document.head.appendChild(script)
+  })
 }
 
 async function saveData(data) {
