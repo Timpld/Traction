@@ -37,7 +37,10 @@ async function saveToGitHub(data, token) {
       sha: file.sha,
     }),
   })
-  if (!res.ok) throw new Error('Save failed')
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(`${res.status} — ${err.message || 'erreur inconnue'}`)
+  }
 }
 
 export default function App() {
@@ -68,8 +71,8 @@ export default function App() {
     setSaveError(false)
     try {
       await saveToGitHub(newData, token)
-    } catch {
-      setSaveError(true)
+    } catch (e) {
+      setSaveError(e.message || true)
     } finally {
       setSaving(false)
     }
@@ -85,7 +88,7 @@ export default function App() {
           <p className="app-subtitle">
             Suivi depuis le 13 avril 2026 · Départ max 10 reps
             {saving && <span className="saving-indicator"> · Sauvegarde…</span>}
-            {saveError && <span className="save-error"> · Erreur — vérifie ton token</span>}
+            {saveError && <span className="save-error"> · Erreur : {saveError}</span>}
           </p>
           <div className="app-divider" />
         </div>
