@@ -5,41 +5,43 @@ import DayList from './components/DayList'
 import { exportToExcel } from './utils/exportExcel'
 import './App.css'
 
+const STORAGE_KEY = 'tractions-data'
+
+const INITIAL_DATA = {
+  "2026-04-13": { "sets": [10] },
+  "2026-04-14": { "sets": [10, 5, 25] },
+  "2026-04-15": { "sets": [20, 30] },
+  "2026-04-16": { "sets": [20, 20, 10] },
+  "2026-04-17": { "sets": [10, 20, 10] },
+  "2026-04-24": { "sets": [5] },
+  "2026-04-30": { "sets": [20, 10] },
+  "2026-05-01": { "sets": [10, 10, 5] },
+  "2026-05-02": { "sets": [24] },
+  "2026-05-13": { "sets": [15, 5] },
+  "2026-05-14": { "sets": [15, 5] },
+  "2026-05-15": { "sets": [10, 10, 15, 15] },
+}
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) return JSON.parse(saved)
+  } catch {}
+  return INITIAL_DATA
+}
+
+function saveData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  } catch {}
+}
+
 export default function App() {
-  const [data, setData] = useState(null)
-  const [error, setError] = useState(null)
+  const [data, setData] = useState(() => loadData())
 
-  useEffect(() => {
-    fetch('/api/data')
-      .then(r => r.json())
-      .then(setData)
-      .catch(() => setError('Impossible de charger les données. Le serveur est-il démarré ?'))
-  }, [])
-
-  async function handleUpdate(newData) {
+  function handleUpdate(newData) {
     setData(newData)
-    try {
-      await fetch('/api/data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newData),
-      })
-    } catch {
-      console.error('Erreur de sauvegarde')
-    }
-  }
-
-  if (error) {
-    return (
-      <div className="app-error">
-        <p>{error}</p>
-        <p>Lancez <code>npm run dev</code> dans votre terminal.</p>
-      </div>
-    )
-  }
-
-  if (!data) {
-    return <div className="app-loading">Chargement…</div>
+    saveData(newData)
   }
 
   return (
