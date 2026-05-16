@@ -9,7 +9,8 @@ const GITHUB_API = 'https://api.github.com/repos/Timpld/Traction/contents/data/t
 const TOKEN_KEY = 'gh-token'
 
 async function loadFromGitHub() {
-  const res = await fetch(GITHUB_API, {
+  const res = await fetch(GITHUB_API + '?t=' + Date.now(), {
+    cache: 'no-store',
     headers: { 'Accept': 'application/vnd.github.v3+json' },
   })
   if (!res.ok) throw new Error('Load failed')
