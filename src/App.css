@@ -1,0 +1,376 @@
+/* ── Variables ── */
+:root {
+  --navy: #1B2D4F;
+  --gold: #C9921A;
+  --bg-alt: #F4F6FA;
+  --white: #FFFFFF;
+  --text: #1a2035;
+  --text-muted: #6B7A99;
+  --border: #DDE3EF;
+  --radius: 8px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg-alt);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+}
+
+/* ── Layout ── */
+.app {
+  min-height: 100vh;
+}
+
+.app-loading,
+.app-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+.app-error code {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 13px;
+}
+
+/* ── Header ── */
+.app-header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-header__inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 24px 0;
+}
+
+.app-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--navy);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.app-subtitle {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.app-divider {
+  height: 2px;
+  background: var(--gold);
+  margin-top: 14px;
+  border-radius: 2px;
+}
+
+/* ── Main ── */
+.app-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 24px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Stats ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.1;
+}
+
+.stat-label {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-unit {
+  font-size: 11px;
+  color: var(--gold);
+  margin-top: 2px;
+}
+
+/* ── Chart ── */
+.chart-wrapper {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 8px 8px;
+}
+
+/* ── Actions bar ── */
+.section-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── Buttons ── */
+.btn {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  transition: opacity 0.15s;
+}
+
+.btn:hover {
+  opacity: 0.85;
+}
+
+.btn--primary {
+  background: var(--navy);
+  color: var(--white);
+}
+
+.btn--outline {
+  background: transparent;
+  color: var(--navy);
+  border-color: var(--navy);
+}
+
+.btn--export {
+  background: var(--gold);
+  color: var(--white);
+  font-weight: 600;
+}
+
+/* ── Day List ── */
+.day-list {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.day-list__header {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
+  padding: 10px 16px;
+  background: var(--navy);
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  gap: 8px;
+}
+
+/* ── Day Row ── */
+.day-row {
+  border-top: 1px solid var(--border);
+}
+
+.day-row--today .day-row__summary {
+  background: #EEF3FB;
+}
+
+.day-row__summary {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1fr 1fr 1fr;
+  align-items: center;
+  padding: 10px 16px;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.day-row__summary:hover {
+  background: var(--bg-alt);
+}
+
+.day-row--today .day-row__summary:hover {
+  background: #e3ecf9;
+}
+
+.day-row__arrow {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.day-row__date {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.day-row__sets {
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.day-row__sets--rest {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.day-row__total,
+.day-row__max,
+.day-row__cumul {
+  font-size: 13px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Editor panel ── */
+.day-row__editor {
+  padding: 12px 16px 16px;
+  background: var(--bg-alt);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.day-row__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--navy);
+  color: var(--white);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badge__remove {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  padding: 0 0 1px 2px;
+  display: flex;
+  align-items: center;
+}
+
+.badge__remove:hover {
+  color: var(--white);
+}
+
+.day-row__input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.day-row__input {
+  font-family: inherit;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  width: 80px;
+  color: var(--text);
+  background: var(--white);
+  outline: none;
+}
+
+.day-row__input:focus {
+  border-color: var(--navy);
+}
+
+.day-row__actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ── Mobile responsive ── */
+@media (max-width: 600px) {
+  .app-main {
+    padding: 16px 12px 48px;
+  }
+
+  .app-header__inner {
+    padding: 16px 12px 0;
+  }
+
+  .app-title {
+    font-size: 22px;
+  }
+
+  .day-list__header {
+    grid-template-columns: 2fr 2fr 1fr;
+    padding: 8px 12px;
+  }
+
+  .day-list__header span:nth-child(4),
+  .day-list__header span:nth-child(5) {
+    display: none;
+  }
+
+  .day-row__summary {
+    grid-template-columns: 2fr 2fr 1fr;
+    padding: 10px 12px;
+  }
+
+  .day-row__max,
+  .day-row__cumul {
+    display: none;
+  }
+
+  .day-row__editor {
+    padding: 10px 12px 14px;
+  }
+}
