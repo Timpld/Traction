@@ -19,7 +19,8 @@ async function loadFromGitHub() {
 }
 
 async function saveToGitHub(data, token) {
-  const fileRes = await fetch(GITHUB_API, {
+  const fileRes = await fetch(GITHUB_API + '?t=' + Date.now(), {
+    cache: 'no-store',
     headers: { 'Accept': 'application/vnd.github.v3+json' },
   })
   const file = await fileRes.json()
