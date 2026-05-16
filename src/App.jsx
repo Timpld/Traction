@@ -5,7 +5,7 @@ import DayList from './components/DayList'
 import { exportToExcel } from './utils/exportExcel'
 import './App.css'
 
-const STORAGE_KEY = 'tractions-data'
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2_FaUnwRcl1XEWXmAKpu_HTo-a0w2uQxBsKSV77mHNM4WGFeppeCkUy1kn69r9c2v/exec'
 
 const INITIAL_DATA = {
   "2026-04-13": { "sets": [10] },
@@ -22,26 +22,42 @@ const INITIAL_DATA = {
   "2026-05-15": { "sets": [10, 10, 15, 15] },
 }
 
-function loadData() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY)
-    if (saved) return JSON.parse(saved)
-  } catch {}
-  return INITIAL_DATA
+async function fetchData() {
+  const res = await fetch(APPS_SCRIPT_URL, { redirect: 'follow' })
+  const json = await res.json()
+  if (!json || Object.keys(json).length === 0) return INITIAL_DATA
+  return json
 }
 
-function saveData(data) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-  } catch {}
+async function saveData(data) {
+  await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(data),
+    redirect: 'follow',
+  })
 }
 
 export default function App() {
-  const [data, setData] = useState(() => loadData())
+  const [data, setData] = useState(null)
+  const [saving, setSaving] = useState(false)
 
-  function handleUpdate(newData) {
+  useEffect(() => {
+    fetchData().then(setData).catch(() => setData(INITIAL_DATA))
+  }, [])
+
+  async function handleUpdate(newData) {
     setData(newData)
-    saveData(newData)
+    setSaving(true)
+    try {
+      await saveData(newData)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!data) {
+    return <div className="app-loading">Chargement…</div>
   }
 
   return (
@@ -49,7 +65,10 @@ export default function App() {
       <header className="app-header">
         <div className="app-header__inner">
           <h1 className="app-title">Tractions</h1>
-          <p className="app-subtitle">Suivi depuis le 13 avril 2026 · Départ max 10 reps</p>
+          <p className="app-subtitle">
+            Suivi depuis le 13 avril 2026 · Départ max 10 reps
+            {saving && <span className="saving-indicator"> · Sauvegarde…</span>}
+          </p>
           <div className="app-divider" />
         </div>
       </header>
@@ -69,3 +88,4 @@ export default function App() {
     </div>
   )
 }
+
