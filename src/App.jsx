@@ -48,7 +48,7 @@ async function saveToGitHub(data, token) {
 export default function App() {
   const [data, setData] = useState(null)
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_KEY) || '')
-  const [tokenInput, setTokenInput] = useState('')
+  const [tokenInput, setTokenInput] = useState(null)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState(false)
 
@@ -59,11 +59,11 @@ export default function App() {
   }, [])
 
   function handleSaveToken() {
-    const t = tokenInput.trim()
+    const t = (tokenInput || '').trim()
     if (!t) return
     localStorage.setItem(TOKEN_KEY, t)
     setToken(t)
-    setTokenInput('')
+    setTokenInput(null)
   }
 
   async function handleUpdate(newData) {
@@ -86,7 +86,12 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <div className="app-header__inner">
-          <h1 className="app-title">Tractions</h1>
+          <div className="app-header__top">
+            <h1 className="app-title">Tractions</h1>
+            <button className="btn btn--outline token-btn" onClick={() => setTokenInput(t => t === null ? '' : null)}>
+              {token ? '🔑 Token' : '🔑 Configurer'}
+            </button>
+          </div>
           <p className="app-subtitle">
             Suivi depuis le 13 avril 2026 · Départ max 10 reps
             {saving && <span className="saving-indicator"> · Sauvegarde…</span>}
@@ -97,18 +102,9 @@ export default function App() {
       </header>
 
       <main className="app-main">
-        {token && (
-          <div style={{ textAlign: 'right' }}>
-            <button className="btn btn--outline" style={{ fontSize: 12 }} onClick={() => {
-              localStorage.removeItem(TOKEN_KEY)
-              setToken('')
-            }}>Changer de token</button>
-          </div>
-        )}
-
-        {!token && (
+        {tokenInput !== null && (
           <div className="token-setup">
-            <strong>Configuration requise</strong>
+            <strong>{token ? 'Changer de token' : 'Configuration requise'}</strong>
             <p>Entre ton token GitHub pour sauvegarder tes séances sur tous tes appareils.</p>
             <div className="token-input-row">
               <input
@@ -119,9 +115,17 @@ export default function App() {
                 onKeyDown={e => e.key === 'Enter' && handleSaveToken()}
                 className="day-row__input"
                 style={{ width: '100%', maxWidth: 340 }}
+                autoFocus
               />
               <button className="btn btn--primary" onClick={handleSaveToken}>Enregistrer</button>
             </div>
+            {token && (
+              <button className="btn btn--outline" style={{ alignSelf: 'flex-start' }} onClick={() => {
+                localStorage.removeItem(TOKEN_KEY)
+                setToken('')
+                setTokenInput(null)
+              }}>Supprimer le token</button>
+            )}
           </div>
         )}
 
