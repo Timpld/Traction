@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import TabNav from './components/TabNav'
 import OverviewPage from './components/OverviewPage'
 import ExercisePage from './components/ExercisePage'
+import ProgramModal from './components/ProgramModal'
 import './App.css'
+
+const PROGRAM_KEY = 'program-active'
 
 const GITHUB_API = 'https://api.github.com/repos/Timpld/Traction/contents/data/exercises.json'
 const TOKEN_KEY = 'gh-token'
@@ -52,6 +55,9 @@ export default function App() {
   const [showToken, setShowToken] = useState(false)
   const [tokenInput, setTokenInput] = useState('')
   const [activeTab, setActiveTab] = useState('overview')
+  const [activeSeance, setActiveSeance] = useState(() => {
+    try { const s = localStorage.getItem(PROGRAM_KEY); return s ? JSON.parse(s) : null } catch { return null }
+  })
   const saveTimer = useRef(null)
 
   useEffect(() => {
@@ -88,6 +94,42 @@ export default function App() {
           setSaveStatus(`Erreur — ${err.message}`)
           setTimeout(() => setSaveStatus(null), 5000)
         })
+    }, 600)
+  }
+
+  function handleSelectSeance(seance) {
+    setActiveSeance(seance)
+    try { localStorage.setItem(PROGRAM_KEY, JSON.stringify(seance)) } catch {}
+  }
+
+  function getTodayISO() {
+    const now = new Date()
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  }
+
+  function handleApplyAll() {
+    if (!activeSeance) return
+    const today = getTodayISO()
+    const exercises = ['tractions', 'dips', 'pompes']
+    let newAllData = { ...allData }
+    exercises.forEach(ex => {
+      const sets = activeSeance[ex]
+      if (!sets || sets.length === 0) return
+      newAllData = { ...newAllData, [ex]: { ...newAllData[ex], [today]: { sets, rest: false } } }
+    })
+    setAllData(newAllData)
+
+    if (!token) {
+      setSaveStatus('⚠ Token manquant')
+      setTimeout(() => setSaveStatus(null), 3000)
+      return
+    }
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    setSaveStatus('Sauvegarde…')
+    saveTimer.current = setTimeout(() => {
+      saveToGitHub(newAllData, token)
+        .then(() => { setSaveStatus('Sauvegardé ✓'); setTimeout(() => setSaveStatus(null), 2000) })
+        .catch(err => { setSaveStatus(`Erreur — ${err.message}`); setTimeout(() => setSaveStatus(null), 5000) })
     }, 600)
   }
 
@@ -160,15 +202,39 @@ export default function App() {
       <main className="app-main">
         {activeTab === 'overview' && <OverviewPage allData={allData} />}
         {activeTab === 'tractions' && (
-          <ExercisePage exerciseId="tractions" data={allData.tractions} onUpdate={d => handleUpdate('tractions', d)} />
+          <ExercisePage
+            exerciseId="tractions"
+            data={allData.tractions}
+            onUpdate={d => handleUpdate('tractions', d)}
+            prefillSets={activeSeance?.tractions}
+            seanceLabel={activeSeance ? `${activeSeance.programLabel} · S${activeSeance.semaineNum}·${activeSeance.seanceNum}` : null}
+          />
         )}
         {activeTab === 'dips' && (
-          <ExercisePage exerciseId="dips" data={allData.dips} onUpdate={d => handleUpdate('dips', d)} />
+          <ExercisePage
+            exerciseId="dips"
+            data={allData.dips}
+            onUpdate={d => handleUpdate('dips', d)}
+            prefillSets={activeSeance?.dips}
+            seanceLabel={activeSeance ? `${activeSeance.programLabel} · S${activeSeance.semaineNum}·${activeSeance.seanceNum}` : null}
+          />
         )}
         {activeTab === 'pompes' && (
-          <ExercisePage exerciseId="pompes" data={allData.pompes} onUpdate={d => handleUpdate('pompes', d)} />
+          <ExercisePage
+            exerciseId="pompes"
+            data={allData.pompes}
+            onUpdate={d => handleUpdate('pompes', d)}
+            prefillSets={activeSeance?.pompes}
+            seanceLabel={activeSeance ? `${activeSeance.programLabel} · S${activeSeance.semaineNum}·${activeSeance.seanceNum}` : null}
+          />
         )}
       </main>
+
+      <ProgramModal
+        activeSeance={activeSeance}
+        onSelectSeance={handleSelectSeance}
+        onApplyAll={handleApplyAll}
+      />
     </div>
   )
 }
