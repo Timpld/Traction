@@ -1269,3 +1269,40 @@ body {
   background: #1A7A5E;
   border-color: #1A7A5E;
 }
+
+/* ── Lightbox ── */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  background: rgba(0,0,0,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: zoom-out;
+}
+
+.lightbox__img {
+  max-width: 100%;
+  max-height: 100vh;
+  object-fit: contain;
+  user-select: none;
+}
+
+.lightbox__close {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.lightbox__close:hover { background: rgba(255,255,255,0.3); }
+
+.prog-modal__page-img { cursor: zoom-in; }

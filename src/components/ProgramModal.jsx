@@ -1,13 +1,21 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { PROGRAMS } from '../data/programs'
 
 const BASE = import.meta.env.BASE_URL
 
 export default function ProgramModal({ activeSeance, onSelectSeance, onApplyAll }) {
   const [open, setOpen] = useState(false)
+  const [lightbox, setLightbox] = useState(false)
   const [progIdx, setProgIdx] = useState(0)
   const [semIdx, setSemIdx] = useState(0)
   const [seancIdx, setSeancIdx] = useState(0)
+
+  useEffect(() => {
+    if (!lightbox) return
+    const close = e => e.key === 'Escape' && setLightbox(false)
+    window.addEventListener('keydown', close)
+    return () => window.removeEventListener('keydown', close)
+  }, [lightbox])
 
   const prog = PROGRAMS[progIdx]
   const semaine = prog.semaines[semIdx] || prog.semaines[0]
@@ -109,6 +117,8 @@ export default function ProgramModal({ activeSeance, onSelectSeance, onApplyAll 
                     src={imgSrc}
                     alt={`${seance.jour} – ${seance.label}`}
                     className="prog-modal__page-img"
+                    onClick={() => setLightbox(true)}
+                    title="Appuyer pour agrandir"
                   />
                 : <div className="prog-modal__no-page">{seance.label}</div>
               }
@@ -131,6 +141,12 @@ export default function ProgramModal({ activeSeance, onSelectSeance, onApplyAll 
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {lightbox && imgSrc && (
+        <div className="lightbox" onClick={() => setLightbox(false)}>
+          <img src={imgSrc} alt={seance.label} className="lightbox__img" />
+          <button className="lightbox__close" onClick={() => setLightbox(false)}>✕</button>
         </div>
       )}
     </>
