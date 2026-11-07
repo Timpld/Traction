@@ -1,142 +1,134 @@
 import { useState } from 'react'
 import { PROGRAMS } from '../data/programs'
 
-const DIFF_COLOR = {
-  '~':  '#6B7A99',
-  '+':  '#1A7A5E',
-  '++': '#9B2335',
-}
-
-function repChips(label, sets) {
-  if (!sets || sets.length === 0) return null
-  return (
-    <span className="seance-ex">
-      <span className="seance-ex__label">{label}</span>
-      {sets.map((n, i) => (
-        <span key={i} className="seance-ex__chip">{n}</span>
-      ))}
-    </span>
-  )
-}
-
-function hasReps(seance) {
-  return (
-    seance.tractions.length > 0 ||
-    seance.dips.length > 0 ||
-    seance.pompes.length > 0
-  )
-}
+const BASE = import.meta.env.BASE_URL
 
 export default function ProgramModal({ activeSeance, onSelectSeance, onApplyAll }) {
   const [open, setOpen] = useState(false)
-  const [programIdx, setProgramIdx] = useState(0)
+  const [progIdx, setProgIdx] = useState(0)
+  const [semIdx, setSemIdx] = useState(0)
+  const [seancIdx, setSeancIdx] = useState(0)
 
-  const program = PROGRAMS[programIdx]
+  const prog = PROGRAMS[progIdx]
+  const semaine = prog.semaines[semIdx] || prog.semaines[0]
+  const seance = semaine.seances[seancIdx] || semaine.seances[0]
+
+  function handleChangeProg(i) {
+    setProgIdx(i)
+    setSemIdx(0)
+    setSeancIdx(0)
+  }
+
+  function handleChangeSem(i) {
+    setSemIdx(i)
+    setSeancIdx(0)
+  }
+
+  function handleSelect() {
+    onSelectSeance({
+      programId: prog.id,
+      programLabel: prog.label,
+      semaineNum: semaine.num,
+      seanceNum: seance.num,
+      jour: seance.jour,
+      label: seance.label,
+      tractions: seance.tractions,
+      dips: seance.dips,
+      pompes: seance.pompes,
+    })
+    setOpen(false)
+  }
+
+  const isActive = activeSeance
+    && activeSeance.programId === prog.id
+    && activeSeance.semaineNum === semaine.num
+    && activeSeance.seanceNum === seance.num
+
+  const imgSrc = seance.page
+    ? `${BASE}programs/${prog.id}/${seance.page}`
+    : null
 
   return (
     <>
-      <button className="program-fab" onClick={() => setOpen(true)} title="Programme">
+      <button className="program-fab" onClick={() => setOpen(true)}>
         <span className="program-fab__icon">📋</span>
-        <span className="program-fab__label">Programme</span>
+        <span className="program-fab__label">
+          {activeSeance
+            ? `${activeSeance.programLabel} · S${activeSeance.semaineNum} · ${activeSeance.jour}`
+            : 'Programme'}
+        </span>
       </button>
 
       {open && (
-        <div className="program-overlay" onClick={() => setOpen(false)}>
-          <div className="program-modal" onClick={e => e.stopPropagation()}>
-            <div className="program-modal__header">
-              <h2 className="program-modal__title">Programme</h2>
-              <button className="program-modal__close" onClick={() => setOpen(false)}>✕</button>
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setOpen(false)}>
+          <div className="prog-modal">
+            <div className="prog-modal__header">
+              <span className="prog-modal__title">Programme</span>
+              <button className="prog-modal__close" onClick={() => setOpen(false)}>✕</button>
             </div>
 
-            <div className="program-tabs">
+            <div className="prog-modal__prog-tabs">
               {PROGRAMS.map((p, i) => (
                 <button
                   key={p.id}
-                  className={`program-tab${programIdx === i ? ' program-tab--active' : ''}`}
-                  onClick={() => setProgramIdx(i)}
+                  className={`prog-tab${progIdx === i ? ' prog-tab--active' : ''}`}
+                  onClick={() => handleChangeProg(i)}
                 >
                   {p.label}
                 </button>
               ))}
             </div>
 
-            {activeSeance && (
-              <div className="program-active-banner">
-                <div className="program-active-banner__info">
-                  <span className="program-active-banner__label">Séance active :</span>
-                  <span className="program-active-banner__name">
-                    {activeSeance.programLabel} · S{activeSeance.semaineNum}·{activeSeance.seanceNum} — {activeSeance.label}
-                  </span>
-                </div>
+            <div className="prog-modal__sem-row">
+              {prog.semaines.map((s, i) => (
                 <button
-                  className="btn btn--gold program-active-banner__apply"
-                  onClick={() => { onApplyAll(); setOpen(false) }}
+                  key={s.num}
+                  className={`sem-pill${semIdx === i ? ' sem-pill--active' : ''}`}
+                  onClick={() => handleChangeSem(i)}
                 >
-                  Appliquer tout
+                  Sem.{s.num}
                 </button>
-              </div>
-            )}
-
-            <div className="program-body">
-              {program.semaines.map(semaine => (
-                <div key={semaine.num} className="program-semaine">
-                  <div className="program-semaine__title">Semaine {semaine.num}</div>
-                  {semaine.seances.map(seance => {
-                    const selectable = hasReps(seance)
-                    const isActive =
-                      activeSeance &&
-                      activeSeance.programId === program.id &&
-                      activeSeance.semaineNum === semaine.num &&
-                      activeSeance.seanceNum === seance.num
-
-                    return (
-                      <div
-                        key={seance.num}
-                        className={`seance-row${isActive ? ' seance-row--active' : ''}${!selectable ? ' seance-row--rest' : ''}`}
-                      >
-                        <div className="seance-row__meta">
-                          <span
-                            className="seance-row__diff"
-                            style={{ color: DIFF_COLOR[seance.difficulte] || '#6B7A99' }}
-                          >
-                            {seance.difficulte}
-                          </span>
-                          <span className="seance-row__jour">{seance.jour}</span>
-                          <span className="seance-row__label">{seance.label}</span>
-                        </div>
-
-                        <div className="seance-row__reps">
-                          {repChips('T', seance.tractions)}
-                          {repChips('D', seance.dips)}
-                          {repChips('P', seance.pompes)}
-                          {!selectable && <span className="seance-row__rest-tag">Repos / Cardio</span>}
-                        </div>
-
-                        {selectable && (
-                          <button
-                            className={`btn seance-row__select${isActive ? ' seance-row__select--active' : ''}`}
-                            onClick={() => {
-                              onSelectSeance(isActive ? null : {
-                                programId: program.id,
-                                programLabel: program.label,
-                                semaineNum: semaine.num,
-                                seanceNum: seance.num,
-                                label: seance.label,
-                                tractions: seance.tractions,
-                                dips: seance.dips,
-                                pompes: seance.pompes,
-                              })
-                              setOpen(false)
-                            }}
-                          >
-                            {isActive ? 'Désélectionner' : 'Sélectionner'}
-                          </button>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
               ))}
+            </div>
+
+            <div className="prog-modal__jour-row">
+              {semaine.seances.map((s, i) => (
+                <button
+                  key={s.num}
+                  className={`jour-pill${seancIdx === i ? ' jour-pill--active' : ''}`}
+                  onClick={() => setSeancIdx(i)}
+                >
+                  {s.jour}
+                </button>
+              ))}
+            </div>
+
+            <div className="prog-modal__page-area">
+              {imgSrc
+                ? <img
+                    src={imgSrc}
+                    alt={`${seance.jour} – ${seance.label}`}
+                    className="prog-modal__page-img"
+                  />
+                : <div className="prog-modal__no-page">{seance.label}</div>
+              }
+            </div>
+
+            <div className="prog-modal__footer">
+              <div className="prog-modal__footer-info">
+                <span className="prog-modal__footer-label">{seance.jour} — {seance.label}</span>
+                {activeSeance && (
+                  <button className="btn btn--gold" onClick={() => { onApplyAll(); setOpen(false) }}>
+                    Appliquer tout
+                  </button>
+                )}
+              </div>
+              <button
+                className={`btn btn--primary prog-modal__select${isActive ? ' prog-modal__select--active' : ''}`}
+                onClick={handleSelect}
+              >
+                {isActive ? '✓ Sélectionnée' : 'Sélectionner cette séance'}
+              </button>
             </div>
           </div>
         </div>
