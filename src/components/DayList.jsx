@@ -1,18 +1,23 @@
 import { useState } from 'react'
-import { getAllDaysFrom } from '../utils/dateUtils'
+import { getAllDays } from '../utils/dateUtils'
 import DayRow from './DayRow'
 
-export default function DayList({ data, onUpdate, startDate }) {
+export default function DayList({ data, onUpdate }) {
   const [openDay, setOpenDay] = useState(null)
 
-  const days = getAllDaysFrom(startDate).slice().reverse()
+  const days = getAllDays().slice().reverse()
 
+  // Cumulative totals in chronological order
   const cumulMap = {}
   let running = 0
-  getAllDaysFrom(startDate).forEach(iso => {
+  getAllDays().forEach(iso => {
     running += (data[iso]?.sets || []).reduce((a, b) => a + b, 0)
     cumulMap[iso] = running
   })
+
+  function handleToggle(iso) {
+    setOpenDay(prev => (prev === iso ? null : iso))
+  }
 
   function handleUpdate(iso, entry) {
     const newData = { ...data }
@@ -41,7 +46,7 @@ export default function DayList({ data, onUpdate, startDate }) {
           cumul={cumulMap[iso]}
           onUpdate={entry => handleUpdate(iso, entry)}
           isOpen={openDay === iso}
-          onToggle={() => setOpenDay(prev => prev === iso ? null : iso)}
+          onToggle={() => handleToggle(iso)}
         />
       ))}
     </div>

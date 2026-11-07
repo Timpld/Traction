@@ -1,4 +1,4 @@
-export default function Stats({ data, color = '#1B2D4F' }) {
+export default function Stats({ data }) {
   const entries = Object.values(data)
   const allSets = entries.flatMap(e => e.sets || [])
 
@@ -20,7 +20,7 @@ export default function Stats({ data, color = '#1B2D4F' }) {
     <div className="stats-grid">
       {cards.map(c => (
         <div key={c.label} className="stat-card">
-          <div className="stat-value" style={{ color }}>{c.value}</div>
+          <div className="stat-value">{c.value}</div>
           <div className="stat-label">{c.label}</div>
           <div className="stat-unit">{c.unit}</div>
         </div>
