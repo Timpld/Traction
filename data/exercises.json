@@ -1688,6 +1688,13 @@
       "rest": false
     }
   },
-  "dips": {},
+  "dips": {
+    "2026-11-07": {
+      "sets": [
+        10
+      ],
+      "rest": false
+    }
+  },
   "pompes": {}
 }
