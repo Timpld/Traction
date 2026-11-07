@@ -1270,6 +1270,82 @@ body {
   border-color: #1A7A5E;
 }
 
+/* ── View toggle (Page / Séries) ── */
+.prog-modal__view-toggle {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px 0;
+  flex-shrink: 0;
+}
+
+.view-toggle-btn {
+  flex: 1;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.view-toggle-btn--active {
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}
+
+/* ── Checklist area ── */
+.prog-modal__checklist-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.set-checklist__title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.set-checklist__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.set-pill {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.set-pill--done {
+  background: #1A7A5E;
+  border-color: #1A7A5E;
+  color: #fff;
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
 /* ── Lightbox ── */
 .lightbox {
   position: fixed;

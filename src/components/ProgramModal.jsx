@@ -3,12 +3,37 @@ import { PROGRAMS } from '../data/programs'
 
 const BASE = import.meta.env.BASE_URL
 
+function SetChecklist({ label, sets, color, checked, onToggle }) {
+  if (!sets || sets.length === 0) return null
+  return (
+    <div className="set-checklist">
+      <div className="set-checklist__title" style={{ color }}>{label}</div>
+      <div className="set-checklist__items">
+        {sets.map((reps, i) => (
+          <button
+            key={i}
+            className={`set-pill${checked[i] ? ' set-pill--done' : ''}`}
+            onClick={() => onToggle(i)}
+            title={`Série ${i + 1} : ${reps === 1 ? 'iso' : `${reps} reps`}`}
+          >
+            {reps === 1 ? '⏱' : reps}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function ProgramModal({ activeSeance, onSelectSeance, onApplyAll }) {
   const [open, setOpen] = useState(false)
   const [lightbox, setLightbox] = useState(false)
   const [progIdx, setProgIdx] = useState(0)
   const [semIdx, setSemIdx] = useState(0)
   const [seancIdx, setSeancIdx] = useState(0)
+  const [showChecklist, setShowChecklist] = useState(false)
+  const [checkedT, setCheckedT] = useState({})
+  const [checkedD, setCheckedD] = useState({})
+  const [checkedP, setCheckedP] = useState({})
 
   useEffect(() => {
     if (!lightbox) return
@@ -25,12 +50,29 @@ export default function ProgramModal({ activeSeance, onSelectSeance, onApplyAll 
     setProgIdx(i)
     setSemIdx(0)
     setSeancIdx(0)
+    resetChecked()
   }
 
   function handleChangeSem(i) {
     setSemIdx(i)
     setSeancIdx(0)
+    resetChecked()
   }
+
+  function handleChangeSeance(i) {
+    setSeancIdx(i)
+    resetChecked()
+  }
+
+  function resetChecked() {
+    setCheckedT({})
+    setCheckedD({})
+    setCheckedP({})
+  }
+
+  function toggleT(i) { setCheckedT(c => ({ ...c, [i]: !c[i] })) }
+  function toggleD(i) { setCheckedD(c => ({ ...c, [i]: !c[i] })) }
+  function toggleP(i) { setCheckedP(c => ({ ...c, [i]: !c[i] })) }
 
   function handleSelect() {
     onSelectSeance({
@@ -55,6 +97,11 @@ export default function ProgramModal({ activeSeance, onSelectSeance, onApplyAll 
   const imgSrc = seance.page
     ? `${BASE}programs/${prog.id}/${seance.page}`
     : null
+
+  const totalSets = (seance.tractions?.length || 0) + (seance.dips?.length || 0) + (seance.pompes?.length || 0)
+  const doneSets = Object.values(checkedT).filter(Boolean).length
+    + Object.values(checkedD).filter(Boolean).length
+    + Object.values(checkedP).filter(Boolean).length
 
   return (
     <>
@@ -104,25 +151,71 @@ export default function ProgramModal({ activeSeance, onSelectSeance, onApplyAll 
                 <button
                   key={s.num}
                   className={`jour-pill${seancIdx === i ? ' jour-pill--active' : ''}`}
-                  onClick={() => setSeancIdx(i)}
+                  onClick={() => handleChangeSeance(i)}
                 >
                   {s.jour}
                 </button>
               ))}
             </div>
 
-            <div className="prog-modal__page-area">
-              {imgSrc
-                ? <img
-                    src={imgSrc}
-                    alt={`${seance.jour} – ${seance.label}`}
-                    className="prog-modal__page-img"
-                    onClick={() => setLightbox(true)}
-                    title="Appuyer pour agrandir"
-                  />
-                : <div className="prog-modal__no-page">{seance.label}</div>
-              }
+            <div className="prog-modal__view-toggle">
+              <button
+                className={`view-toggle-btn${!showChecklist ? ' view-toggle-btn--active' : ''}`}
+                onClick={() => setShowChecklist(false)}
+              >
+                📄 Page
+              </button>
+              <button
+                className={`view-toggle-btn${showChecklist ? ' view-toggle-btn--active' : ''}`}
+                onClick={() => setShowChecklist(true)}
+              >
+                ✓ Séries {totalSets > 0 ? `(${doneSets}/${totalSets})` : ''}
+              </button>
             </div>
+
+            {!showChecklist ? (
+              <div className="prog-modal__page-area">
+                {imgSrc
+                  ? <img
+                      src={imgSrc}
+                      alt={`${seance.jour} – ${seance.label}`}
+                      className="prog-modal__page-img"
+                      onClick={() => setLightbox(true)}
+                      title="Appuyer pour agrandir"
+                    />
+                  : <div className="prog-modal__no-page">{seance.label}</div>
+                }
+              </div>
+            ) : (
+              <div className="prog-modal__checklist-area">
+                {totalSets === 0
+                  ? <div className="prog-modal__no-page">Pas de séries à cocher</div>
+                  : <>
+                      <SetChecklist
+                        label="Tractions"
+                        sets={seance.tractions}
+                        color="#1B2D4F"
+                        checked={checkedT}
+                        onToggle={toggleT}
+                      />
+                      <SetChecklist
+                        label="Dips"
+                        sets={seance.dips}
+                        color="#1A7A5E"
+                        checked={checkedD}
+                        onToggle={toggleD}
+                      />
+                      <SetChecklist
+                        label="Pompes"
+                        sets={seance.pompes}
+                        color="#9B2335"
+                        checked={checkedP}
+                        onToggle={toggleP}
+                      />
+                    </>
+                }
+              </div>
+            )}
 
             <div className="prog-modal__footer">
               <div className="prog-modal__footer-info">
