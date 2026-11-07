@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ComposedChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { getAllDaysFrom, formatDateShort, START_DATES, subDays, EXERCISE_CONFIG } from '../utils/dateUtils'
 
 const EXERCISES = [
@@ -15,6 +15,8 @@ const RANGES = [
   { label: 'Tout', value: 'all' },
 ]
 
+const MA_WINDOW = 3
+
 export default function OverviewPage({ allData }) {
   const [visible, setVisible] = useState({ tractions: true, dips: true, pompes: true })
   const [range, setRange] = useState(30)
@@ -25,12 +27,25 @@ export default function OverviewPage({ allData }) {
     days = days.filter(d => d >= cutoff)
   }
 
-  const chartData = days.map(iso => {
+  const rawPoints = days.map(iso => {
     const point = { date: formatDateShort(iso) }
     EXERCISES.forEach(ex => {
       point[ex.id] = (allData[ex.id]?.[iso]?.sets || []).reduce((a, b) => a + b, 0)
     })
     return point
+  })
+
+  const chartData = rawPoints.map((point, i) => {
+    const dayTotal = EXERCISES.reduce((acc, ex) => acc + (visible[ex.id] ? point[ex.id] : 0), 0)
+    const slice = rawPoints.slice(Math.max(0, i - MA_WINDOW + 1), i + 1)
+    const nonZero = slice.filter(p => EXERCISES.some(ex => visible[ex.id] && p[ex.id] > 0))
+    const avg = nonZero.length > 0
+      ? Math.round(
+          nonZero.reduce((acc, p) => acc + EXERCISES.reduce((a, ex) => a + (visible[ex.id] ? p[ex.id] : 0), 0), 0)
+          / nonZero.length * 10
+        ) / 10
+      : null
+    return { ...point, movingAvg: dayTotal > 0 ? avg : null }
   })
 
   const stats = EXERCISES.map(ex => {
@@ -40,15 +55,8 @@ export default function OverviewPage({ allData }) {
     return { ...ex, total, sessions }
   })
 
-  const grandTotal = stats.reduce((a, s) => a + s.total, 0)
-
   return (
     <div className="overview-page">
-      <div className="overview-grand">
-        <span className="overview-grand__num">{grandTotal}</span>
-        <span className="overview-grand__label">reps au total</span>
-      </div>
-
       <div className="overview-stats">
         {stats.map(s => (
           <div key={s.id} className="overview-stat-card" style={{ '--ex-color': s.color }}>
@@ -93,8 +101,9 @@ export default function OverviewPage({ allData }) {
             <YAxis tick={{ fontSize: 11, fill: '#6B7A99' }} axisLine={false} tickLine={false} width={32} />
             <Tooltip contentStyle={{ borderRadius: 6, border: '1px solid #E8ECF3', fontSize: 13 }} />
             {EXERCISES.map(ex => visible[ex.id] && (
-              <Line key={ex.id} type="monotone" dataKey={ex.id} stroke={ex.color} strokeWidth={2} dot={false} name={ex.label} connectNulls />
+              <Bar key={ex.id} dataKey={ex.id} stackId="a" fill={ex.color} name={ex.label} maxBarSize={16} />
             ))}
+            <Line type="monotone" dataKey="movingAvg" stroke="#C9921A" strokeWidth={2} dot={false} name="Moy. mobile" connectNulls />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
